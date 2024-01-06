@@ -19,6 +19,7 @@ interface IProps {
 }
 
 const ViewerSection = ({isJoined, isHost, remoteUid}: IProps) => {
+  remoteUid = 2;
   const [isOpenProdcut, setIsOpenProdcut] = useState(false);
 
   return (

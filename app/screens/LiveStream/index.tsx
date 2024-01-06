@@ -35,13 +35,15 @@ const App = () => {
 
   function showMessage(msg: string) {
     if (msg != null && msg.length > 0) {
-      ToastAndroid.showWithGravityAndOffset(
-        msg,
-        ToastAndroid.LONG,
-        ToastAndroid.BOTTOM,
-        25,
-        50,
-      );
+      if (Platform.OS === 'android') {
+        ToastAndroid.showWithGravityAndOffset(
+          msg,
+          ToastAndroid.LONG,
+          ToastAndroid.BOTTOM,
+          25,
+          50,
+        );
+      }
     }
   }
   const getPermission = async () => {
@@ -120,7 +122,6 @@ const App = () => {
       console.log(e);
     }
   };
-
   return (
     <SafeAreaView style={styles.main}>
       {!isJoined ? (
@@ -167,6 +168,12 @@ const App = () => {
             <Text style={styles.btnBack} onPress={leave}>
               Back
             </Text>
+            <Text style={styles.btnUserName} onPress={leave} numberOfLines={1}>
+              Nguyen Xuan Cam
+            </Text>
+            <Text style={styles.btnViewer} onPress={leave}>
+              500
+            </Text>
           </View>
         </>
       )}
@@ -203,24 +210,47 @@ const styles = StyleSheet.create({
   header: {
     display: 'flex',
     position: 'absolute',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
     overflow: 'visible',
     width: '100%',
     top: 0,
     left: 0,
     zIndex: 100,
+    padding: 16,
   },
   btnBack: {
-    marginTop: 24,
-    marginLeft: 24,
     fontWeight: 'bold',
     color: 'black',
     zIndex: 10,
-    backgroundColor: 'white',
+    backgroundColor: '#fffffff0',
     textAlign: 'center',
     borderRadius: 50,
-    paddingHorizontal: 8,
-    maxWidth: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  btnUserName: {
+    fontWeight: 'bold',
+    color: 'black',
+    zIndex: 10,
+    backgroundColor: '#fffffff0',
+    textAlign: 'center',
+    borderRadius: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: 200,
+    minWidth: 150,
+  },
+  btnViewer: {
+    fontWeight: 'bold',
+    color: 'black',
+    zIndex: 10,
+    backgroundColor: '#fffffff0',
+    textAlign: 'center',
+    borderRadius: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    maxWidth: 200,
   },
 });
 
