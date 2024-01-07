@@ -1,32 +1,28 @@
 import React from 'react';
 
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, View} from 'react-native';
 import {RtcSurfaceView} from 'react-native-agora';
+import {Dimensions} from 'react-native';
 
 interface IProps {
-  isJoined: boolean;
-  isHost: boolean;
   uid?: number;
 }
 
-const HostSection = ({isJoined, isHost, uid}: IProps) => {
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
+
+const HostSection = ({uid}: IProps) => {
   return (
-    <View>
-      {isJoined && isHost ? (
-        <React.Fragment key={0}>
-          <RtcSurfaceView canvas={{uid: 0}} style={styles.videoView} />
-          <Text>Local user uid: {uid}</Text>
-        </React.Fragment>
-      ) : (
-        <Text>{isHost ? 'Join a channel' : ''}</Text>
-      )}
-    </View>
+    <RtcSurfaceView
+      id={'LIVE_VIEW_OF' + uid}
+      canvas={{uid: uid}}
+      style={styles.videoView}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  videoView: {width: '90%', height: 200},
-  header: {},
+  videoView: {flex: 1, width: windowWidth, height: windowHeight},
 });
 
 export default HostSection;

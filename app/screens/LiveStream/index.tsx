@@ -2,7 +2,6 @@ import React, {useRef, useState, useEffect} from 'react';
 
 import {
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -19,26 +18,32 @@ import {
 } from 'react-native-agora';
 import ViewerSection from './ViewerSection';
 import HostSection from './HostSection';
+import axios from 'axios';
 
-const appId = 'ac644ced814c4c328bc62d6076ddce35';
-const channelName = 'Livestream Demo';
+const appId = 'f83e2cfcf12f4103a421ffc74a1bba46';
+const channelName = 'live1';
 const token =
-  '007eJxTYJgsKak+u83Cg0XpwwLBd6u1nnr+OSTRs7TWLPB/qMFuzx8KDInJZiYmyakpFoYmySbJxkYWSclmRilmBuZmKSnJqcam+p+mpDYEMjLI3MxkYIRCEJ+fwSezLLW4pCg1MVfBJTU3n4EBAHvuIx8=';
+  '007eJxTYBBYc4aZl2Nu+4PLHqvvfr//uuu71a0asaOxX9JaZK32TTBWYEizME41Sk5LTjM0SjMxNDBONDEyTEtLNjdJNExKSjQxi34/K7UhkJFh5vpjzIwMEAjiszLkZJalGjIwAAASUiJu';
 const uid = 0;
+
+const l = (a: any) => {
+  // console.log(a);
+};
 
 const App = () => {
   const agoraEngineRef = useRef<IRtcEngine>(); // Agora engine instance
-  const [isJoined, setIsJoined] = useState(true); // Indicates if the local user has joined the channel
+  const [isJoined, setIsJoined] = useState(false); // Indicates if the local user has joined the channel
   const [isHost, setIsHost] = useState(false); // Client role
   const [remoteUid, setRemoteUid] = useState(0); // Uid of the remote user
-  // const [message, setMessage] = useState(''); // Message to the user
+  const [viewCount, setViewCount] = useState(0); // Message to the user
+  const [uidHost, setUidHost] = useState<number>(0);
 
   function showMessage(msg: string) {
     if (msg != null && msg.length > 0) {
       if (Platform.OS === 'android') {
         ToastAndroid.showWithGravityAndOffset(
           msg,
-          ToastAndroid.LONG,
+          ToastAndroid.SHORT,
           ToastAndroid.BOTTOM,
           25,
           50,
@@ -58,6 +63,39 @@ const App = () => {
     // Initialize Agora engine when the app starts
     setupVideoSDKEngine();
   });
+
+  useEffect(() => {
+    let timerFetch: string | number | NodeJS.Timeout | null | undefined = null;
+    if (isJoined) {
+      timerFetch = setInterval(() => {
+        const apiLink =
+          'https://api.agora.io/dev/v1/channel/user/' +
+          appId +
+          '/' +
+          channelName;
+
+        axios
+          .get(apiLink, {
+            headers: {
+              Authorization:
+                'Basic YTEzNzllYjE1MWZiNGM4YjgxMDU0NzQyMmYzMDgwOWE6YzYzZWJhOTliZDU2NDMxOWFkOGEwMDExY2M3MTk3Y2E=',
+              'Content-Type': 'application/json',
+            },
+          })
+          .then(resp => {
+            setViewCount(resp.data?.data?.audience_total || 0);
+            setUidHost(resp.data?.data?.broadcasters || 0);
+          });
+
+        //
+      }, 1000);
+    }
+    return () => {
+      if (timerFetch != null) {
+        clearInterval(timerFetch);
+      }
+    };
+  }, [isJoined]);
 
   const setupVideoSDKEngine = async () => {
     try {
@@ -95,18 +133,24 @@ const App = () => {
       return;
     }
     try {
-      agoraEngineRef.current?.setChannelProfile(
-        ChannelProfileType.ChannelProfileLiveBroadcasting,
+      l(
+        agoraEngineRef.current?.setChannelProfile(
+          ChannelProfileType.ChannelProfileLiveBroadcasting,
+        ),
       );
       if (isHost) {
-        agoraEngineRef.current?.startPreview();
-        agoraEngineRef.current?.joinChannel(token, channelName, uid, {
-          clientRoleType: ClientRoleType.ClientRoleBroadcaster,
-        });
+        l(agoraEngineRef.current?.startPreview());
+        l(
+          agoraEngineRef.current?.joinChannel(token, channelName, uid, {
+            clientRoleType: ClientRoleType.ClientRoleBroadcaster,
+          }),
+        );
       } else {
-        agoraEngineRef.current?.joinChannel(token, channelName, uid, {
-          clientRoleType: ClientRoleType.ClientRoleAudience,
-        });
+        l(
+          agoraEngineRef.current?.joinChannel(token, channelName, uid, {
+            clientRoleType: ClientRoleType.ClientRoleAudience,
+          }),
+        );
       }
     } catch (e) {
       console.log(e);
@@ -151,11 +195,9 @@ const App = () => {
         </View>
       ) : (
         <>
-          <ScrollView
-            style={styles.scroll}
-            contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.scroll}>
             {isHost ? (
-              <HostSection isJoined={isJoined} isHost={isHost} uid={uid} />
+              <HostSection uid={uid} />
             ) : (
               <ViewerSection
                 isJoined={isJoined}
@@ -163,17 +205,15 @@ const App = () => {
                 remoteUid={remoteUid}
               />
             )}
-          </ScrollView>
+          </View>
           <View style={styles.header}>
             <Text style={styles.btnBack} onPress={leave}>
               Back
             </Text>
-            <Text style={styles.btnUserName} onPress={leave} numberOfLines={1}>
-              Nguyen Xuan Cam
+            <Text style={styles.btnUserName} numberOfLines={1}>
+              {uidHost}
             </Text>
-            <Text style={styles.btnViewer} onPress={leave}>
-              500
-            </Text>
+            <Text style={styles.btnViewer}>{viewCount}</Text>
           </View>
         </>
       )}
@@ -195,7 +235,12 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   main: {flex: 1, width: '100%'},
-  scroll: {flex: 1, backgroundColor: '#ddeeff', width: '100%'},
+  scroll: {
+    flex: 1,
+    backgroundColor: '#ddeeff',
+    width: '100%',
+    alignItems: 'center',
+  },
   scrollContainer: {alignItems: 'center'},
   videoView: {width: '90%', height: 200},
   btnContainer: {flexDirection: 'row', justifyContent: 'center', marginTop: 10},
